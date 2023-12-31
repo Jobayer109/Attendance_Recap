@@ -36,6 +36,23 @@ app.post("/register", async (req, res, next) => {
   }
 });
 
+// Login
+app.post("/login", async (req, res, next) => {
+  const { email, password } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(400).json({ message: "Invalid credential" });
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return res.status(400).json({ message: "Invalid credential" });
+  }
+  delete user._doc.password;
+  res.status(200).json({ message: "Login successfully", user });
+});
+
 // Global error handle.
 app.use((err, req, res, next) => {
   next(err.message);
