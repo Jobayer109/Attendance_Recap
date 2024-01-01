@@ -5,14 +5,18 @@ const port = process.env.PORT || 3000;
 
 const User = require("./models/User");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const authenticate = require("./middlewares/authenticate");
 
+// middlewares_______________________________________________________________
 app.use(express.json());
 
+// Home route________________________________________________________________
 app.get("/", (req, res) => {
   res.status(200).send("<h1>Attendance server is running</h1>");
 });
 
-// Register
+// Register__________________________________________________________________
 app.post("/register", async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -36,30 +40,42 @@ app.post("/register", async (req, res, next) => {
   }
 });
 
-// Login
+// Login_____________________________________________________________________
 app.post("/login", async (req, res, next) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
   if (!user) {
-    return res.status(400).json({ message: "Invalid credential" });
+    return res.status(400).json({ message: "Invalid email that you entered" });
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
+  const isMatch = bcrypt.compare(password, user.password);
   if (!isMatch) {
-    return res.status(400).json({ message: "Invalid credential" });
+    return res.status(400).json({ message: "Invalid password" });
   }
   delete user._doc.password;
-  res.status(200).json({ message: "Login successfully", user });
+
+  // JWT Generate
+  const token = jwt.sign(user._doc, "secret-key", { expiresIn: "1h" });
+  res.status(200).json({ message: "Login successfully", token });
 });
 
-// Global error handle.
+// Some routes________________________________________________________________
+app.get("/private", authenticate, (req, res) => {
+  return res.status(200).json({ message: "This is private route" });
+});
+
+app.get("/public", (req, res) => {
+  return res.status(200).json({ message: "This is public route" });
+});
+
+// Global error handle________________________________________________________
 app.use((err, req, res, next) => {
   next(err.message);
   return res.status(500).json({ message: "Server error occurred" });
 });
 
-// Connect Database
+// Connect Database__________________________________________________________
 connectDB("mongodb://127.0.0.1:27017/Attendance_Recap")
   .then(() => {
     console.log("Database connected");
