@@ -6,7 +6,7 @@ const {
   privateController,
   publicController,
   homeController,
-} = require("../controllers/auth");
+} = require("../controllers/authController");
 
 router.post("/register", registerController);
 router.post("/login", loginController);
