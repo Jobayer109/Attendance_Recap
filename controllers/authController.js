@@ -1,4 +1,5 @@
 const { loginService, registerService } = require("../services/authService");
+const { findUserByProperty } = require("../services/userService");
 
 const registerController = async (req, res, next) => {
   const { name, email, password } = req.body;
@@ -12,6 +13,9 @@ const registerController = async (req, res, next) => {
 
 const loginController = async (req, res) => {
   const { email, password } = req.body;
+  const token = await loginService({ email, password });
+  const userInfo = await findUserByProperty("email", email);
+  res.status(200).json({ message: "Login successfully", token, userInfo });
 };
 
 // ________________________________________________________________________
